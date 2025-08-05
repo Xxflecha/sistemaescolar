@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jefe de Departamento</title>
+    <link rel="stylesheet" href="jefe.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <header class="jefe-header">
+        <div class="menu-hamburguesa" id="menuBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="jefe-logo">
+            <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
+        </div>
+        <div class="jefe-titulo">
+            Ingeniería En Sistemas Computacionales
+        </div>
+        <div class="jefe-profesor">
+            <span id="prof-nombre">Prof. </span>
+            <div class="jefe-avatar" id="avatarMenuBtn">
+                <img src="public/jefedepartamento.png" alt="Avatar" height="40">
+            </div>
+            <div class="avatar-menu" id="avatarMenu">
+                <button id="logoutBtn">Cerrar sesión</button>
+            </div>
+        </div>
+        <div class="menu-desplegable" id="menuDesplegable" style="display:none;">
+            <a onclick="window.location.href='jefe.html'">Inicio</a>
+            <a onclick="window.location.href='JDDocentes.html'">Docentes</a>
+            <a onclick="window.location.href='horarios.html'">Horarios</a>
+            <a onclick="window.location.href='gestion_alumnos.html'">Gestionar alumnos</a>
+            <a onclick="cerrarSesion()">Cerrar sesión</a>
+        </div>
+    </header>
+    <main class="jefe-main">
+        <div class="jefe-layout">
+            <aside class="jefe-sidebar">
+                <div class="sidebar-logo">
+                    <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
+                </div>
+                <nav class="sidebar-menu">
+                    <button class="sidebar-btn" id="btnDocentes">Docentes</button>
+                    <button class="sidebar-btn" id="btnHorarios">Horarios</button>
+                    <button class="sidebar-btn" id="btnGestionAlumnos">Gestionar alumnos</button>
+                    <button class="sidebar-btn" id="btnImprimir">Imprimir Documentos</button>
+                </nav>
+            </aside>
+            <section class="jefe-content">
+                <h2 class="jefe-central-title">JEFE DE DEPARTAMENTO</h2>
+                <section class="jefe-info">
+                    <div class="jefe-info-title">INFORMACIÓN GENERAL</div>
+                    <div class="jefe-info-content">
+                        <p><b>Nombre:</b> <span id="info-nombre"></span></p>
+                        <p><b>Apellido:</b> <span id="info-apellido"></span></p>
+                        <p><b>Departamento:</b> <span id="info-departamento"></span></p>
+                        <div class="jefe-info-btns">
+                            <button id="editarBtn">Editar Información</button>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </main>
+    <div class="modal" id="modalImprimir">
+        <div class="modal-content">
+            <h3>Imprimir Documentos</h3>
+            <form id="formImprimir">
+                <label><input type="checkbox" name="doc" value="alumnos"> Datos Alumnos</label><br>
+                <label><input type="checkbox" name="doc" value="docentes"> Datos Docentes</label><br>
+                <label><input type="checkbox" name="doc" value="calificaciones"> Datos Calificaciones</label><br>
+                <button type="submit">Imprimir Documento</button>
+                <button type="button" id="cerrarModal">Cancelar</button>
+            </form>
+            <div id="impresionMsg" style="margin-top:10px;"></div>
+        </div>
+    </div>
+    <script>
+    // Cargar datos del jefe
+    document.addEventListener('DOMContentLoaded', function() {
+        const jefe = JSON.parse(localStorage.getItem('jefe'));
+        if (jefe) {
+            document.getElementById('prof-nombre').textContent = `Prof. ${jefe.nombre} ${jefe.apellido}`;
+            document.getElementById('info-nombre').textContent = jefe.nombre;
+            document.getElementById('info-apellido').textContent = jefe.apellido;
+            document.getElementById('info-departamento').textContent = jefe.departamento_nombre || jefe.departamento_id;
+        }
+        document.getElementById('menuDesplegable').style.display = 'none';
+    });
+    // Avatar menu
+    const avatarBtn = document.getElementById('avatarMenuBtn');
+    const avatarMenu = document.getElementById('avatarMenu');
+    avatarBtn.onclick = function(e) {
+        avatarMenu.classList.toggle('show');
+        e.stopPropagation();
+    };
+    document.body.onclick = function() { avatarMenu.classList.remove('show'); };
+    avatarMenu.onclick = function(e) { e.stopPropagation(); };
+    document.getElementById('logoutBtn').onclick = function() {
+        localStorage.removeItem('jefe');
+        window.location.href = 'indexSP.html';
+    };
+    // Modal imprimir
+    const modal = document.getElementById('modalImprimir');
+    document.getElementById('btnImprimir').onclick = function() {
+        modal.style.display = 'flex';
+    };
+    document.getElementById('cerrarModal').onclick = function() {
+        modal.style.display = 'none';
+        document.getElementById('impresionMsg').textContent = '';
+    };
+    document.getElementById('formImprimir').onsubmit = async function(e) {
+        e.preventDefault();
+        const checked = Array.from(document.querySelectorAll('input[name="doc"]:checked'));
+        if (checked.length === 0) {
+            document.getElementById('impresionMsg').textContent = 'Selecciona al menos un documento.';
+            return;
+        }
+        // Si se selecciona "Datos Docentes", genera PDF con los datos de los docentes
+        if (checked.some(cb => cb.value === 'docentes')) {
+            try {
+                const res = await fetch('http://localhost:4000/api/docentes');
+                let docentes = await res.json();
+                docentes = docentes.sort((a, b) => Number(a.id) - Number(b.id));
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+                doc.setFontSize(18);
+                doc.text('Reporte de Docentes', doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+                doc.setFontSize(10);
+
+                const headers = [
+                    "ID", "Clave", "Nombre", "Apellido", "Calle", "Colonia", "CP", "Correo Personal",
+                    "Fecha Nac.", "Número", "Ciudad", "Teléfono", "Correo Inst.", "Antigüedad"
+                ];
+                const data = docentes.map(d => [
+                    d.id || '',
+                    d.clave || '',
+                    d.nombre || '',
+                    d.apellido || '',
+                    d.calle || '',
+                    d.colonia || '',
+                    d.cp || '',
+                    d.correo_personal || '',
+                    d.fecha_nacimiento ? (typeof d.fecha_nacimiento === 'string' && d.fecha_nacimiento.includes('T') ? d.fecha_nacimiento.split('T')[0] : d.fecha_nacimiento) : '',
+                    d.numero || '',
+                    d.ciudad || '',
+                    d.telefono || '',
+                    d.correo_institucional || '',
+                    d.antiguedad || ''
+                ]);
+
+                // Usa autoTable para una tabla profesional y legible
+                doc.autoTable({
+                    head: [headers],
+                    body: data,
+                    startY: 60,
+                    styles: { fontSize: 8, cellPadding: 2 },
+                    headStyles: { fillColor: [24, 70, 182], textColor: 255, fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [240, 244, 251] },
+                    columnStyles: {
+                        0: { cellWidth: 25 }, // ID
+                        1: { cellWidth: 40 }, // Clave
+                        2: { cellWidth: 60 }, // Nombre
+                        3: { cellWidth: 60 }, // Apellido
+                        4: { cellWidth: 70 }, // Calle
+                        5: { cellWidth: 50 }, // Colonia
+                        6: { cellWidth: 35 }, // CP
+                        7: { cellWidth: 70 }, // Correo Personal
+                        8: { cellWidth: 45 }, // Fecha Nac.
+                        9: { cellWidth: 30 }, // Número
+                        10: { cellWidth: 50 }, // Ciudad
+                        11: { cellWidth: 50 }, // Teléfono
+                        12: { cellWidth: 70 }, // Correo Inst.
+                        13: { cellWidth: 40 }  // Antigüedad
+                    }
+                });
+
+                doc.save('docentes.pdf');
+                document.getElementById('impresionMsg').textContent = 'PDF generado y descargado.';
+            } catch (err) {
+                document.getElementById('impresionMsg').textContent = 'Error al generar PDF.';
+            }
+            return;
+        }
+        setTimeout(() => {
+            document.getElementById('impresionMsg').textContent = 'Impresión exitosa (simulada).';
+        }, 1000);
+    };
+
+    // Redirigir a docentes.html al hacer clic en el botón Docentes
+    document.getElementById('btnDocentes').onclick = function() {
+        window.location.href = 'JDDocentes.html';
+    };
+    document.getElementById('btnHorarios').onclick = function() {
+        window.location.href = 'horarios.html';
+    };
+    document.getElementById('btnGestionAlumnos').onclick = function() {
+        window.location.href = 'gestion_alumnos.html';
+    };
+    document.getElementById('menuBtn').onclick = function(e) {
+        const menu = document.getElementById('menuDesplegable');
+        menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        menu.style.flexDirection = 'column';
+        e.stopPropagation();
+    };
+    document.body.onclick = function() {
+        document.getElementById('menuDesplegable').style.display = 'none';
+    };
+    document.getElementById('menuDesplegable').onclick = function(e) {
+        e.stopPropagation();
+    };
+    function cerrarSesion() {
+        localStorage.removeItem('jefe');
+        window.location.href = 'indexSP.html';
+    }
+    </script>
+</body>
+</html>
