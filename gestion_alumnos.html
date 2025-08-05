@@ -4,206 +4,354 @@
     <meta charset="UTF-8">
     <title>Gestión de Alumnos</title>
     <style>
-        body { font-family: 'Inter', Arial, sans-serif; background: #f4f7fb; margin: 0; }
-        .header { background: #1846b6; color: #fff; padding: 20px 40px; font-size: 1.5em; }
-        .main { max-width: 1100px; margin: 30px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(24,70,182,0.10); padding: 30px; }
-        .alumno-list { margin-bottom: 30px; }
-        .alumno-list select { font-size: 1em; padding: 8px 12px; border-radius: 8px; border: 1px solid #bfc6d1; }
-        .section-title { font-size: 1.2em; font-weight: bold; margin: 24px 0 12px 0; color: #1846b6; }
-        .info-table { border-collapse: collapse; width: 100%; margin-bottom: 18px; }
-        .info-table th, .info-table td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-        .info-table th { background: #f3f4f6; color: #222; font-weight: bold; }
-        .info-table td { background: #fff; }
-        .edit-btn, .save-btn { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 8px 22px; font-size: 1em; cursor: pointer; margin-top: 10px; }
-        .edit-btn:hover, .save-btn:hover { background: #0d2a6b; }
-        .error-message { color: #c00; margin-bottom: 10px; font-size: 1em; }
-        /* Estilos para el menú */
-        .jefe-header { display: flex; align-items: center; justify-content: space-between; background: #1846b6; color: #fff; padding: 10px 20px; position: relative; }
-        .menu-hamburguesa { display: none; flex-direction: column; cursor: pointer; }
-        .menu-hamburguesa span { height: 3px; width: 25px; background: #fff; margin: 3px 0; }
-        .jefe-logo img { height: 60px; }
-        .jefe-titulo { font-size: 1.2em; flex-grow: 1; margin-left: 10px; }
-        .jefe-profesor { display: flex; align-items: center; }
-        .jefe-avatar img { height: 40px; border-radius: 50%; }
-        .avatar-menu { display: none; position: absolute; top: 100%; right: 0; background: #fff; color: #000; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .avatar-menu button { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; }
-        .avatar-menu button:hover { background: #0d2a6b; }
-        .menu-desplegable { display: none; position: absolute; top: 100%; left: 0; background: #fff; color: #000; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 200px; }
-        .menu-desplegable a { display: block; padding: 10px 15px; text-decoration: none; color: #000; }
-        .menu-desplegable a:hover { background: #f4f4f4; }
-        @media (max-width: 768px) {
-            .menu-hamburguesa { display: flex; }
-            .jefe-logo, .jefe-titulo, .jefe-profesor { display: none; }
-            .menu-desplegable { width: 100%; }
+        body { margin:0; font-family: 'Segoe UI', Arial, sans-serif; background: #f6f8fb; }
+        .header {
+            background: #1846b6;
+            color: #fff;
+            padding: 18px 30px;
+            display: flex;
+            align-items: center;
+        }
+        .header img {
+            height: 38px;
+            margin-right: 12px;
+        }
+        .header-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            flex: 1;
+        }
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 40px;
+        }
+        .alumno-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(24,70,182,0.10);
+            padding: 32px 36px;
+            min-width: 350px;
+            max-width: 98vw;
+        }
+        .alumno-form label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        .alumno-form input, .alumno-form select {
+            width: 100%;
+            padding: 7px 10px;
+            border-radius: 7px;
+            border: 1px solid #bfc6d1;
+            margin-top: 2px;
+            font-size: 1em;
+        }
+        .alumno-form input[readonly] {
+            background: #f3f3f3;
+        }
+        .alumno-form .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .alumno-form .form-row > div {
+            flex: 1;
+        }
+        .alumno-form .btns {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+        }
+        .alumno-form button {
+            background: #1846b6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .alumno-form button[disabled] {
+            background: #bfc6d1;
+            cursor: not-allowed;
+        }
+        .alumno-form .error-message {
+            color: #c00;
+            margin-top: 10px;
+        }
+        .alumno-form .success-message {
+            color: #0a0;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <header class="jefe-header">
-        <div class="menu-hamburguesa" id="menuBtn">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <div class="jefe-logo">
-            <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
-        </div>
-        <div class="jefe-titulo">
-            Ingeniería En Sistemas Computacionales
-        </div>
-        <div class="jefe-profesor">
-            <span id="prof-nombre">Prof. </span>
-            <div class="jefe-avatar" id="avatarMenuBtn">
-                <img src="public/jefedepartamento.png" alt="Avatar" height="40">
-            </div>
-            <div class="avatar-menu" id="avatarMenu">
-                <button id="logoutBtn">Cerrar sesión</button>
-            </div>
-        </div>
-        <div class="menu-desplegable" id="menuDesplegable" style="display:none;">
-            <a onclick="window.location.href='jefe.html'">Inicio</a>
-            <a onclick="window.location.href='JDDocentes.html'">Docentes</a>
-            <a onclick="window.location.href='horarios.html'">Horarios</a>
-            <a onclick="window.location.href='gestion_alumnos.html'">Gestionar alumnos</a>
-            <a onclick="cerrarSesion()">Cerrar sesión</a>
-        </div>
-    </header>
-    <div class="header">Gestión de Alumnos</div>
+    <div class="header">
+        <img src="tec.png" alt="Logo Instituto">
+        <span class="header-title">Ingeniería En Sistemas Computacionales</span>
+    </div>
     <div class="main">
-        <div class="alumno-list">
-            <label for="alumnoSelect">Selecciona alumno:</label>
-            <select id="alumnoSelect"></select>
-        </div>
-        <div id="alumnoInfo"></div>
-        <div class="error-message" id="errorMsg" style="display:none;"></div>
-        <div style="margin-top:18px;">
-            <button class="edit-btn" id="editarAlumnoBtn">Editar datos</button>
-            <button class="save-btn" id="guardarAlumnoBtn" style="display:none;">Guardar cambios</button>
+        <div class="alumno-card">
+            <form class="alumno-form" id="alumnoForm">
+                <label for="alumnoSelect">Selecciona alumno:</label>
+                <select id="alumnoSelect"></select>
+                <div id="alumno-error" class="error-message" style="display:none;"></div>
+                <div id="alumno-success" class="success-message" style="display:none;"></div>
+                <div id="alumno-fields" style="display:none;">
+                    <div class="form-row">
+                        <div>
+                            <label>No. Control</label>
+                            <input type="text" id="no_control" readonly>
+                        </div>
+                        <div>
+                            <label>Nombre</label>
+                            <input type="text" id="nombre" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Apellido Paterno</label>
+                            <input type="text" id="apellido_paterno" readonly>
+                        </div>
+                        <div>
+                            <label>Apellido Materno</label>
+                            <input type="text" id="apellido_materno" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>CURP</label>
+                            <input type="text" id="curp" readonly>
+                        </div>
+                        <div>
+                            <label>Fecha Nacimiento</label>
+                            <input type="date" id="fecha_nacimiento" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Correo Personal</label>
+                            <input type="email" id="correo_personal" readonly>
+                        </div>
+                        <div>
+                            <label>Teléfono</label>
+                            <input type="text" id="telefono" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Carrera</label>
+                            <input type="text" id="carrera" readonly>
+                        </div>
+                        <div>
+                            <label>Especialidad</label>
+                            <input type="text" id="especialidad" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Modalidad</label>
+                            <input type="text" id="modalidad" readonly>
+                        </div>
+                        <div>
+                            <label>Plan de Estudios</label>
+                            <input type="text" id="plan_estudios" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Semestre</label>
+                            <input type="number" id="semestre" readonly>
+                        </div>
+                        <div>
+                            <label>Estatus</label>
+                            <input type="text" id="estatus" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Fecha Ingreso</label>
+                            <input type="date" id="fecha_ingreso" readonly>
+                        </div>
+                        <div>
+                            <label>Promedio General</label>
+                            <input type="number" id="promedio_general" step="0.01" readonly>
+                        </div>
+                    </div>
+                    <!-- Puedes agregar más campos si lo deseas -->
+                    <div class="btns">
+                        <button type="button" id="editarBtn">Editar datos</button>
+                        <button type="submit" id="guardarBtn" style="display:none;">Guardar</button>
+                        <button type="button" id="cancelarBtn" style="display:none;">Cancelar</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
     <script>
         let alumnos = [];
         let alumnoActual = null;
+        let editMode = false;
 
+        // Cargar alumnos al iniciar
         async function cargarAlumnos() {
-            const res = await fetch('https://sistemaescolar-backend.onrender.com/api/alumnos');
-            alumnos = await res.json();
-            const select = document.getElementById('alumnoSelect');
-            select.innerHTML = '';
-            alumnos.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a.id;
-                opt.textContent = `${a.nombre} ${a.apellido_paterno} ${a.apellido_materno} (${a.no_control})`;
-                select.appendChild(opt);
-            });
-            if (alumnos.length > 0) {
-                select.value = alumnos[0].id;
-                cargarAlumnoCompleto(select.value);
-            }
-            select.onchange = () => cargarAlumnoCompleto(select.value);
-        }
-
-        async function cargarAlumnoCompleto(id) {
-            document.getElementById('errorMsg').style.display = 'none';
             try {
-                const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/alumno-completo/${id}`);
-                if (!res.ok) throw new Error('No se pudo cargar el alumno');
-                alumnoActual = await res.json();
-                mostrarAlumnoInfo();
+                const res = await fetch('https://sistemaescolar-backend.onrender.com/api/alumnos');
+                alumnos = await res.json();
+                const select = document.getElementById('alumnoSelect');
+                select.innerHTML = '';
+                alumnos.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.nombre} ${a.apellido_paterno} ${a.apellido_materno || ''} (${a.no_control})`;
+                    select.appendChild(opt);
+                });
+                if (alumnos.length > 0) {
+                    select.value = alumnos[0].id;
+                    cargarDatosAlumno(alumnos[0].id);
+                }
             } catch (err) {
-                document.getElementById('errorMsg').textContent = 'Error al cargar datos del alumno';
-                document.getElementById('errorMsg').style.display = 'block';
+                mostrarError('Error al cargar alumnos');
             }
         }
 
-        function mostrarAlumnoInfo() {
-            const a = alumnoActual;
-            document.getElementById('alumnoInfo').innerHTML = `
-                <div class="section-title">Información Personal</div>
-                <table class="info-table">
-                    <tr><th>No. Control</th><td id="edit-no_control">${a.no_control || ''}</td><th>Nombre</th><td id="edit-nombre">${a.nombre || ''} ${a.apellido_paterno || ''} ${a.apellido_materno || ''}</td></tr>
-                    <tr><th>CURP</th><td id="edit-curp">${a.curp || ''}</td><th>Correo</th><td id="edit-correo_personal">${a.correo_personal || ''}</td></tr>
-                    <tr><th>Teléfono</th><td id="edit-telefono">${a.telefono || ''}</td><th>Fecha Nac.</th><td id="edit-fecha_nacimiento">${a.fecha_nacimiento ? a.fecha_nacimiento.split('T')[0] : ''}</td></tr>
-                </table>
-                <div class="section-title">Información Académica</div>
-                <table class="info-table">
-                    <tr><th>Carrera</th><td id="edit-carrera">${a.carrera || ''}</td><th>Especialidad</th><td id="edit-especialidad">${a.especialidad || ''}</td></tr>
-                    <tr><th>Modalidad</th><td id="edit-modalidad">${a.modalidad || ''}</td><th>Plan</th><td id="edit-plan_estudios">${a.plan_estudios || ''}</td></tr>
-                    <tr><th>Semestre</th><td id="edit-semestre">${a.semestre || ''}</td><th>Periodo Actual</th><td id="edit-periodo_actual">${a.periodo_actual || ''}</td></tr>
-                </table>
-            `;
+        // Cargar datos de un alumno
+        async function cargarDatosAlumno(id) {
+            ocultarMensajes();
+            alumnoActual = null;
+            editMode = false;
+            setCamposEditable(false);
+            document.getElementById('guardarBtn').style.display = 'none';
+            document.getElementById('cancelarBtn').style.display = 'none';
+            try {
+                const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/alumnos/${id}`);
+                if (!res.ok) throw new Error();
+                const alumno = await res.json();
+                alumnoActual = alumno;
+                mostrarDatosAlumno(alumno);
+                document.getElementById('alumno-fields').style.display = 'block';
+            } catch (err) {
+                mostrarError('Error al cargar datos del alumno');
+                document.getElementById('alumno-fields').style.display = 'none';
+            }
         }
 
-        document.getElementById('editarAlumnoBtn').onclick = function() {
-            // Convierte los campos en inputs para edición
-            ['no_control','nombre','curp','correo_personal','telefono','fecha_nacimiento','carrera','especialidad','modalidad','plan_estudios','semestre'].forEach(id => {
-                const td = document.getElementById('edit-' + id);
-                if (td) {
-                    const valor = td.textContent;
-                    const input = document.createElement('input');
-                    input.type = (id === 'fecha_nacimiento') ? 'date' : 'text';
-                    input.value = valor;
-                    input.style.width = '120px';
-                    td.innerHTML = '';
-                    td.appendChild(input);
-                }
-            });
-            this.style.display = 'none';
-            document.getElementById('guardarAlumnoBtn').style.display = '';
-        };
+        // Mostrar datos en el formulario
+        function mostrarDatosAlumno(a) {
+            document.getElementById('no_control').value = a.no_control || '';
+            document.getElementById('nombre').value = a.nombre || '';
+            document.getElementById('apellido_paterno').value = a.apellido_paterno || '';
+            document.getElementById('apellido_materno').value = a.apellido_materno || '';
+            document.getElementById('curp').value = a.curp || '';
+            document.getElementById('fecha_nacimiento').value = a.fecha_nacimiento ? a.fecha_nacimiento.split('T')[0] : '';
+            document.getElementById('correo_personal').value = a.correo_personal || '';
+            document.getElementById('telefono').value = a.telefono || '';
+            document.getElementById('carrera').value = a.carrera || '';
+            document.getElementById('especialidad').value = a.especialidad || '';
+            document.getElementById('modalidad').value = a.modalidad || '';
+            document.getElementById('plan_estudios').value = a.plan_estudios || '';
+            document.getElementById('semestre').value = a.semestre || '';
+            document.getElementById('estatus').value = a.estatus || '';
+            document.getElementById('fecha_ingreso').value = a.fecha_ingreso ? a.fecha_ingreso.split('T')[0] : '';
+            document.getElementById('promedio_general').value = a.promedio_general || '';
+        }
 
-        document.getElementById('guardarAlumnoBtn').onclick = async function() {
-            const datos = {};
-            ['no_control','nombre','curp','correo_personal','telefono','fecha_nacimiento','carrera','especialidad','modalidad','plan_estudios','semestre'].forEach(id => {
-                const td = document.getElementById('edit-' + id);
-                if (td && td.firstChild && td.firstChild.tagName === 'INPUT') {
-                    datos[id] = td.firstChild.value;
-                }
+        // Hacer campos editables o solo lectura
+        function setCamposEditable(editable) {
+            [
+                'nombre','apellido_paterno','apellido_materno','curp','fecha_nacimiento','correo_personal','telefono',
+                'carrera','especialidad','modalidad','plan_estudios','semestre','estatus','fecha_ingreso','promedio_general'
+            ].forEach(id => {
+                document.getElementById(id).readOnly = !editable;
             });
-            this.disabled = true;
+        }
+
+        // Mostrar/ocultar mensajes
+        function mostrarError(msg) {
+            document.getElementById('alumno-error').textContent = msg;
+            document.getElementById('alumno-error').style.display = 'block';
+            document.getElementById('alumno-success').style.display = 'none';
+        }
+        function mostrarExito(msg) {
+            document.getElementById('alumno-success').textContent = msg;
+            document.getElementById('alumno-success').style.display = 'block';
+            document.getElementById('alumno-error').style.display = 'none';
+        }
+        function ocultarMensajes() {
+            document.getElementById('alumno-error').style.display = 'none';
+            document.getElementById('alumno-success').style.display = 'none';
+        }
+
+        // Eventos
+        document.getElementById('alumnoSelect').onchange = function() {
+            cargarDatosAlumno(this.value);
+        };
+        document.getElementById('editarBtn').onclick = function() {
+            if (!alumnoActual) return;
+            setCamposEditable(true);
+            editMode = true;
+            document.getElementById('guardarBtn').style.display = '';
+            document.getElementById('cancelarBtn').style.display = '';
+            this.style.display = 'none';
+        };
+        document.getElementById('cancelarBtn').onclick = function() {
+            if (alumnoActual) mostrarDatosAlumno(alumnoActual);
+            setCamposEditable(false);
+            editMode = false;
+            document.getElementById('guardarBtn').style.display = 'none';
+            document.getElementById('cancelarBtn').style.display = 'none';
+            document.getElementById('editarBtn').style.display = '';
+            ocultarMensajes();
+        };
+        document.getElementById('alumnoForm').onsubmit = async function(e) {
+            e.preventDefault();
+            if (!editMode || !alumnoActual) return;
+            const id = alumnoActual.id;
+            const body = {
+                nombre: document.getElementById('nombre').value.trim(),
+                apellido_paterno: document.getElementById('apellido_paterno').value.trim(),
+                apellido_materno: document.getElementById('apellido_materno').value.trim(),
+                curp: document.getElementById('curp').value.trim(),
+                fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+                correo_personal: document.getElementById('correo_personal').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
+                carrera: document.getElementById('carrera').value.trim(),
+                especialidad: document.getElementById('especialidad').value.trim(),
+                modalidad: document.getElementById('modalidad').value.trim(),
+                plan_estudios: document.getElementById('plan_estudios').value.trim(),
+                semestre: document.getElementById('semestre').value,
+                estatus: document.getElementById('estatus').value.trim(),
+                fecha_ingreso: document.getElementById('fecha_ingreso').value,
+                promedio_general: document.getElementById('promedio_general').value
+            };
             try {
-                const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/alumnos/${alumnoActual.id}`, {
+                const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/alumnos/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
+                    body: JSON.stringify(body)
                 });
                 const data = await res.json();
-                if (data.success) {
-                    Object.assign(alumnoActual, datos);
-                    mostrarAlumnoInfo();
-                    document.getElementById('editarAlumnoBtn').style.display = '';
-                    this.style.display = 'none';
-                    document.getElementById('errorMsg').style.display = 'none';
+                if (res.ok && data.success) {
+                    mostrarExito('Datos guardados correctamente');
+                    alumnoActual = { ...alumnoActual, ...body };
+                    setCamposEditable(false);
+                    editMode = false;
+                    document.getElementById('guardarBtn').style.display = 'none';
+                    document.getElementById('cancelarBtn').style.display = 'none';
+                    document.getElementById('editarBtn').style.display = '';
                 } else {
-                    document.getElementById('errorMsg').textContent = data.message || 'Error al guardar datos';
-                    document.getElementById('errorMsg').style.display = 'block';
+                    mostrarError((data && data.message) || 'Error al guardar');
                 }
             } catch (err) {
-                document.getElementById('errorMsg').textContent = 'Error al guardar datos';
-                document.getElementById('errorMsg').style.display = 'block';
+                mostrarError('Error de conexión con el servidor');
             }
-            this.disabled = false;
         };
 
-        document.addEventListener('DOMContentLoaded', cargarAlumnos);
-
-        // Menú hamburguesa funcional
-        document.getElementById('menuBtn').onclick = function(e) {
-            const menu = document.getElementById('menuDesplegable');
-            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
-            menu.style.flexDirection = 'column';
-            e.stopPropagation();
-        };
-        document.body.onclick = function() {
-            document.getElementById('menuDesplegable').style.display = 'none';
-        };
-        document.getElementById('menuDesplegable').onclick = function(e) {
-            e.stopPropagation();
-        };
-        function cerrarSesion() {
-            localStorage.removeItem('jefe');
-            window.location.href = 'indexSP.html';
-        }
+        // Inicializar
+        cargarAlumnos();
     </script>
 </body>
 </html>
