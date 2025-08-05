@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Docente - Ingeniería en Sistemas Computacionales</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ef 100%);
+      min-height: 100vh;
+    }
+    .header {
+      background: #1846b6;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 30px;
+      height: 70px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(24,70,182,0.08);
+    }
+    .header img { height: 48px; margin-right: 18px; }
+    .header-title { font-size: 2em; font-family: 'Habibi', serif; flex: 1; letter-spacing: 1px; }
+    .menu-hamburguesa {
+      width: 48px; height: 48px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; margin-right: 18px; z-index: 1001;
+    }
+    .menu-hamburguesa span {
+      display: block; height: 5px; width: 32px; background: #fff; margin: 5px 0; border-radius: 2px; transition: 0.2s;
+    }
+    .avatar { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-left: 10px; cursor: pointer; border: 2px solid #fff; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .menu-desplegable {
+      display: none; position: absolute; top: 70px; left: 10px; background: #fff; color: #1846b6; border-radius: 12px; box-shadow: 0 4px 16px rgba(24,70,182,0.12); min-width: 180px; z-index: 2000; flex-direction: column; padding: 10px 0;
+    }
+    .menu-desplegable a {
+      color: #1846b6; text-decoration: none; font-size: 1.1em; padding: 12px 30px; border-radius: 0 18px 18px 0; transition: background 0.2s, color 0.2s; margin-right: 10px; display: block; cursor: pointer;
+    }
+    .menu-desplegable a:hover {
+      background: #e5e7eb; color: #0d2a6b; font-weight: bold;
+    }
+    .main-content {
+      max-width: 1100px;
+      margin: 40px auto 0 auto;
+      padding: 0 20px 40px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .info-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(24,70,182,0.08);
+      padding: 30px;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 18px;
+    }
+    .docente-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 10px;
+    }
+    .docente-avatar {
+      width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid #1846b6; background: #e5e7eb;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .docente-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .docente-info {
+      font-size: 1.2em;
+      color: #1846b6;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .docente-datos {
+      color: #222;
+      font-size: 1em;
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+    .section-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin: 18px 0 12px 0;
+      color: #1846b6;
+      letter-spacing: 1px;
+    }
+    .horario-table, .calif-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 18px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(24,70,182,0.04);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .horario-table th, .horario-table td, .calif-table th, .calif-table td {
+      border: 1px solid #bdbdbd;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .horario-table th, .calif-table th {
+      background: #bfa16c;
+      color: #fff;
+      font-weight: bold;
+    }
+    .horario-table tr:nth-child(even), .calif-table tr:nth-child(even) { background: #f9fafb; }
+    .horario-table tr:hover, .calif-table tr:hover { background: #f3f4f6; }
+    .select-row { margin-bottom: 18px; display: flex; gap: 18px; align-items: center; }
+    .select-row label { font-weight: bold; color: #1846b6; }
+    .select-row select { padding: 6px 12px; border-radius: 8px; border: 1px solid #bfc6d1; font-size: 1em; }
+    .save-btn { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 8px 22px; font-size: 1em; cursor: pointer; margin-top: 10px; }
+    .save-btn:hover { background: #0d2a6b; }
+    .error-message { color: #c00; margin-bottom: 10px; font-size: 1em; }
+    .periodo-actual {
+      font-size: 1.1em;
+      color: #1846b6;
+      background: #e5e7eb;
+      border-radius: 8px;
+      padding: 6px 18px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      display: inline-block;
+    }
+    @media (max-width: 900px) {
+      .main-content { max-width: 98vw; padding: 0 5vw 40px 5vw; }
+      .info-card { padding: 18px; }
+      .docente-header { flex-direction: column; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="menu-hamburguesa" id="menuBtn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <img src="public/tecnologico.png" alt="Logo TecNM">
+    <span class="header-title">Ingeniería En Sistemas Computacionales</span>
+    <div class="avatar" id="avatar">
+      <img id="foto-perfil" src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png" alt="Foto de perfil">
+    </div>
+    <div class="menu-desplegable" id="menuDesplegable">
+      <a onclick="mostrarSeccion('info')">Inicio</a>
+      <a onclick="mostrarSeccion('horario')">Horario</a>
+      <a onclick="mostrarSeccion('calificaciones')">Calificaciones</a>
+      <a onclick="cerrarSesion()">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="main-content">
+    <!-- DATOS DOCENTE -->
+    <div class="info-card" id="docente-info"></div>
+    <!-- HORARIO DOCENTE -->
+    <div class="info-card" id="horario-section" style="display:none;">
+      <div class="section-title">Horario del periodo actual</div>
+      <div class="periodo-actual" id="periodoActualHorario"></div>
+      <table class="horario-table">
+        <thead>
+          <tr>
+            <th>Clave</th>
+            <th>Materia</th>
+            <th>Grupo</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+            <th>Sábado</th>
+            <th>Domingo</th>
+          </tr>
+        </thead>
+        <tbody id="horario-body"></tbody>
+      </table>
+      <div class="error-message" id="errorMsgHorario" style="display:none;"></div>
+    </div>
+    <!-- CALIFICACIONES DOCENTE -->
+    <div class="info-card" id="calif-section" style="display:none;">
+      <div class="section-title">Asignar/Editar Calificación</div>
+      <div class="periodo-actual" id="periodoActualCalif"></div>
+      <div class="select-row">
+        <label for="materiaSelect">Materia:</label>
+        <select id="materiaSelect"></select>
+        <label for="grupoSelect">Grupo:</label>
+        <select id="grupoSelect"></select>
+      </div>
+      <table class="calif-table">
+        <thead>
+          <tr>
+            <th>No. Control</th>
+            <th>Nombre</th>
+            <th>Calificación</th>
+            <th>Guardar</th>
+          </tr>
+        </thead>
+        <tbody id="calif-body"></tbody>
+      </table>
+      <div class="error-message" id="errorMsgCalif" style="display:none;"></div>
+    </div>
+  </div>
+  <script>
+    // Menú hamburguesa funcional
+    document.getElementById('menuBtn').onclick = function(e) {
+      const menu = document.getElementById('menuDesplegable');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+      menu.style.flexDirection = 'column';
+      e.stopPropagation();
+    };
+    document.body.onclick = function() {
+      document.getElementById('menuDesplegable').style.display = 'none';
+    };
+    document.getElementById('menuDesplegable').onclick = function(e) {
+      e.stopPropagation();
+    };
+    function cerrarSesion() {
+      localStorage.removeItem('docente');
+      window.location.href = 'indexSP.html';
+    }
+
+    // Mostrar secciones
+    function mostrarSeccion(seccion) {
+      document.getElementById('docente-info').style.display = seccion === 'info' ? '' : 'none';
+      document.getElementById('horario-section').style.display = seccion === 'horario' ? '' : 'none';
+      document.getElementById('calif-section').style.display = seccion === 'calificaciones' ? '' : 'none';
+      if (seccion === 'horario') cargarHorario();
+      if (seccion === 'calificaciones') cargarMaterias();
+    }
+
+    // Datos del docente
+    let docente = null;
+    document.addEventListener('DOMContentLoaded', async function() {
+      docente = JSON.parse(localStorage.getItem('docente'));
+      if (!docente) {
+        window.location.href = 'indexSP.html';
+        return;
+      }
+      // Foto de perfil
+      if (docente.foto_perfil) {
+        document.getElementById('foto-perfil').src = docente.foto_perfil;
+      }
+      document.getElementById('docente-info').innerHTML = `
+        <div class="docente-header">
+          <div class="docente-avatar">
+            <img src="${docente.foto_perfil || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png'}" alt="Foto de perfil">
+          </div>
+          <div>
+            <div class="docente-info">${docente.nombre || ''} ${docente.apellido || ''}</div>
+            <div class="docente-datos">
+              <b>Clave:</b> ${docente.clave || ''} &nbsp; | &nbsp; <b>Usuario:</b> ${docente.usuario || ''}<br>
+              <b>Correo personal:</b> ${docente.correo_personal || ''}<br>
+              <b>Correo institucional:</b> ${docente.correo_institucional || ''}<br>
+              <b>Teléfono:</b> ${docente.telefono || ''}<br>
+              <b>Ciudad:</b> ${docente.ciudad || ''}<br>
+              <b>Antigüedad:</b> ${docente.antiguedad || ''}
+            </div>
+          </div>
+        </div>
+      `;
+      mostrarSeccion('info');
+    });
+
+    // ----------- HORARIO DOCENTE -----------
+    async function cargarHorario() {
+      const tbody = document.getElementById('horario-body');
+      tbody.innerHTML = '';
+      document.getElementById('errorMsgHorario').style.display = 'none';
+      try {
+        const periodoRes = await fetch('http://localhost:4000/api/periodo-actual');
+        const periodoActual = (await periodoRes.json()).periodo_actual;
+        document.getElementById('periodoActualHorario').textContent = `Periodo actual: ${periodoActual}`;
+        const res = await fetch(`http://localhost:4000/api/horario-docente/${docente.id}`);
+        if (!res.ok) throw new Error('No se pudo cargar el horario');
+        const materias = await res.json();
+        if (!Array.isArray(materias) || materias.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="10">No tienes materias asignadas en el periodo actual.</td></tr>';
+          return;
+        }
+        materias.forEach(m => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${m.clave_materia || ''}</td>
+            <td>${m.nombre_materia || ''}</td>
+            <td>${m.grupo || ''}</td>
+            <td>${m.lunes || ''}</td>
+            <td>${m.martes || ''}</td>
+            <td>${m.miercoles || ''}</td>
+            <td>${m.jueves || ''}</td>
+            <td>${m.viernes || ''}</td>
+            <td>${m.sabado || ''}</td>
+            <td>${m.domingo || ''}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('errorMsgHorario').textContent = 'Error al cargar el horario';
+        document.getElementById('errorMsgHorario').style.display = 'block';
+      }
+    }
+
+    // ----------- CALIFICACIONES DOCENTE -----------
+    let materiasDocente = [];
+    let alumnosMateria = [];
+    let grupoActual = '';
+    let materiaActual = null;
+    let periodoActual = '';
+
+    async function cargarMaterias() {
+      const periodoRes = await fetch('http://localhost:4000/api/periodo-actual');
+      periodoActual = (await periodoRes.json()).periodo_actual;
+      document.getElementById('periodoActualCalif').textContent = `Periodo actual: ${periodoActual}`;
+      const res = await fetch(`http://localhost:4000/api/materias-docente/${docente.id}`);
+      materiasDocente = await res.json();
+      const materiaSelect = document.getElementById('materiaSelect');
+      materiaSelect.innerHTML = '';
+      const grupos = new Set();
+      materiasDocente.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.materia_id;
+        opt.textContent = `${m.clave_materia} - ${m.nombre_materia}`;
+        materiaSelect.appendChild(opt);
+        grupos.add(m.grupo);
+      });
+      document.getElementById('grupoSelect').innerHTML = '';
+      grupos.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        document.getElementById('grupoSelect').appendChild(opt);
+      });
+      if (materiasDocente.length > 0) {
+        materiaSelect.value = materiasDocente[0].materia_id;
+        document.getElementById('grupoSelect').value = materiasDocente[0].grupo;
+        cargarAlumnos();
+      }
+      materiaSelect.onchange = cargarAlumnos;
+      document.getElementById('grupoSelect').onchange = cargarAlumnos;
+    }
+
+    async function cargarAlumnos() {
+      materiaActual = document.getElementById('materiaSelect').value;
+      grupoActual = document.getElementById('grupoSelect').value;
+      const res = await fetch(`http://localhost:4000/api/alumnos-materia/${materiaActual}/${grupoActual}/${periodoActual}`);
+      alumnosMateria = await res.json();
+      const tbody = document.getElementById('calif-body');
+      tbody.innerHTML = '';
+      if (!Array.isArray(alumnosMateria) || alumnosMateria.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">No hay alumnos en este grupo/materia.</td></tr>';
+        return;
+      }
+      alumnosMateria.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${a.no_control}</td>
+          <td>${a.nombre} ${a.apellido_paterno} ${a.apellido_materno}</td>
+          <td><input type="number" min="0" max="100" step="1" value="" id="calif-${a.id}" style="width:70px;"></td>
+          <td><button class="save-btn" onclick="guardarCalificacion(${a.id})">Guardar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function guardarCalificacion(alumno_id) {
+      const califInput = document.getElementById(`calif-${alumno_id}`);
+      const calificacion = califInput.value;
+      if (calificacion === '' || isNaN(calificacion) || calificacion < 0 || calificacion > 100) {
+        document.getElementById('errorMsgCalif').textContent = 'Calificación inválida';
+        document.getElementById('errorMsgCalif').style.display = 'block';
+        return;
+      }
+      document.getElementById('errorMsgCalif').style.display = 'none';
+      try {
+        const res = await fetch('http://localhost:4000/api/calificaciones-docente', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            alumno_id,
+            materia_id: materiaActual,
+            periodo: periodoActual,
+            calificacion: Number(calificacion)
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          califInput.style.background = '#d4edda';
+        } else {
+          document.getElementById('errorMsgCalif').textContent = data.message || 'Error al guardar';
+          document.getElementById('errorMsgCalif').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('errorMsgCalif').textContent = 'Error al guardar calificación';
+        document.getElementById('errorMsgCalif').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
+
