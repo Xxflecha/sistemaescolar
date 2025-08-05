@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calificaciones Docente</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7fb; margin: 0; }
+    .main { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(24,70,182,0.08); padding: 30px; }
+    .select-row { margin-bottom: 18px; }
+    .calif-table { border-collapse: collapse; width: 100%; margin-top: 18px; }
+    .calif-table th, .calif-table td { border: 1px solid #bdbdbd; padding: 8px 10px; text-align: center; }
+    .calif-table th { background: #bfa16c; color: #fff; font-weight: bold; }
+    .calif-table tr:nth-child(even) { background: #f9fafb; }
+    .calif-table tr:hover { background: #f3f4f6; }
+    .save-btn { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 8px 22px; font-size: 1em; cursor: pointer; margin-top: 10px; }
+    .save-btn:hover { background: #0d2a6b; }
+    .error-message { color: #c00; margin-bottom: 10px; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <h2>Asignar/Editar Calificaciones</h2>
+    <div class="select-row">
+      <label for="materiaSelect">Materia:</label>
+      <select id="materiaSelect"></select>
+      <label for="grupoSelect">Grupo:</label>
+      <select id="grupoSelect"></select>
+    </div>
+    <table class="calif-table">
+      <thead>
+        <tr>
+          <th>No. Control</th>
+          <th>Nombre</th>
+          <th>Calificación</th>
+          <th>Guardar</th>
+        </tr>
+      </thead>
+      <tbody id="calif-body"></tbody>
+    </table>
+    <div class="error-message" id="errorMsg" style="display:none;"></div>
+  </div>
+  <script>
+    let docente = JSON.parse(localStorage.getItem('docente'));
+    if (!docente) window.location.href = 'indexSP.html';
+    let periodoActual = '';
+    let materiasDocente = [];
+    let alumnosMateria = [];
+    let grupoActual = '';
+    let materiaActual = null;
+
+    async function cargarMaterias() {
+      const res = await fetch(`http://localhost:4000/api/materias-docente/${docente.id}`);
+      materiasDocente = await res.json();
+      const materiaSelect = document.getElementById('materiaSelect');
+      materiaSelect.innerHTML = '';
+      const grupos = new Set();
+      materiasDocente.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.materia_id;
+        opt.textContent = `${m.clave_materia} - ${m.nombre_materia}`;
+        materiaSelect.appendChild(opt);
+        grupos.add(m.grupo);
+      });
+      document.getElementById('grupoSelect').innerHTML = '';
+      grupos.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        document.getElementById('grupoSelect').appendChild(opt);
+      });
+      if (materiasDocente.length > 0) {
+        materiaSelect.value = materiasDocente[0].materia_id;
+        document.getElementById('grupoSelect').value = materiasDocente[0].grupo;
+        cargarAlumnos();
+      }
+      materiaSelect.onchange = cargarAlumnos;
+      document.getElementById('grupoSelect').onchange = cargarAlumnos;
+    }
+
+    async function cargarAlumnos() {
+      materiaActual = document.getElementById('materiaSelect').value;
+      grupoActual = document.getElementById('grupoSelect').value;
+      const periodoRes = await fetch('http://localhost:4000/api/periodo-actual');
+      periodoActual = (await periodoRes.json()).periodo_actual;
+      const res = await fetch(`http://localhost:4000/api/alumnos-materia/${materiaActual}/${grupoActual}/${periodoActual}`);
+      alumnosMateria = await res.json();
+      const tbody = document.getElementById('calif-body');
+      tbody.innerHTML = '';
+      if (!Array.isArray(alumnosMateria) || alumnosMateria.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">No hay alumnos en este grupo/materia.</td></tr>';
+        return;
+      }
+      alumnosMateria.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${a.no_control}</td>
+          <td>${a.nombre} ${a.apellido_paterno} ${a.apellido_materno}</td>
+          <td><input type="number" min="0" max="100" step="1" value="" id="calif-${a.id}" style="width:70px;"></td>
+          <td><button class="save-btn" onclick="guardarCalificacion(${a.id})">Guardar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function guardarCalificacion(alumno_id) {
+      const califInput = document.getElementById(`calif-${alumno_id}`);
+      const calificacion = califInput.value;
+      if (calificacion === '' || isNaN(calificacion) || calificacion < 0 || calificacion > 100) {
+        document.getElementById('errorMsg').textContent = 'Calificación inválida';
+        document.getElementById('errorMsg').style.display = 'block';
+        return;
+      }
+      document.getElementById('errorMsg').style.display = 'none';
+      try {
+        const res = await fetch('http://localhost:4000/api/calificaciones-docente', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            alumno_id,
+            materia_id: materiaActual,
+            periodo: periodoActual,
+            calificacion: Number(calificacion)
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          califInput.style.background = '#d4edda';
+        } else {
+          document.getElementById('errorMsg').textContent = data.message || 'Error al guardar';
+          document.getElementById('errorMsg').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('errorMsg').textContent = 'Error al guardar calificación';
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarMaterias);
+  </script>
+</body>
+</html>
