@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla Docentes</title>
+    <link rel="stylesheet" href="JDDocentes.css">
+</head>
+<body>
+    <header class="doc-header">
+        <div class="doc-topbar">
+            <div class="menu-icon" id="menuIcon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="doc-logo">
+                <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
+            </div>
+            <div class="doc-title">Ingenieria En Sistemas Computacionales</div>
+        </div>
+        <nav class="doc-menu" id="docMenu">
+            <button onclick="window.location.href='jefe.html'">Inicio</button>
+            <button onclick="window.location.href='gestion_alumnos.html'">Alumnos</button>
+            <button onclick="window.location.href='JDDocentes.html'">Docentes</button>
+            <button onclick="window.location.href='horarios.html'">Horarios</button>
+        </nav>
+    </header>
+    <main class="doc-main">
+        <h1 class="doc-main-title">DOCENTE</h1>
+        <section class="doc-general">
+            <div class="doc-general-header">
+                <span class="doc-general-title">DATOS GENERALES</span>
+                <div id="docenteList" class="docente-list"></div>
+            </div>
+            <div class="doc-general-cards">
+                <div class="doc-card">
+                    <div class="doc-card-title">CLAVE</div>
+                    <div class="doc-card-value"><span id="doc-clave"></span></div>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-card-title">NOMBRE</div>
+                    <div class="doc-card-value"><span id="doc-nombre"></span></div>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-card-title">APELLIDOS</div>
+                    <div class="doc-card-value"><span id="doc-apellidos"></span></div>
+                </div>
+            </div>
+        </section>
+        <section class="doc-personal">
+            <div class="doc-personal-title">DATOS PERSONALES</div>
+            <div class="doc-personal-content">
+                <div>
+                    <div>CALLE: <span id="doc-calle"></span></div>
+                    <div>COLONIA: <span id="doc-colonia"></span></div>
+                    <div>CODIGO POSTAL: <span id="doc-cp"></span></div>
+                    <div>CORREO PERSONAL: <span id="doc-correo-personal"></span></div>
+                    <div>FECHA DE NACIMIENTO: <span id="doc-fecha-nac"></span></div>
+                </div>
+                <div>
+                    <div>NO.: <span id="doc-numero"></span></div>
+                    <div>CIUDAD: <span id="doc-ciudad"></span></div>
+                    <div>TELEFONO: <span id="doc-telefono"></span></div>
+                    <div>CORREO INSTITUCIONAL: <span id="doc-correo-inst"></span></div>
+                    <div>ANTIGÜEDAD: <span id="doc-antiguedad"></span></div>
+                </div>
+            </div>
+        </section>
+        <div class="doc-actions">
+            <button id="editarDocenteBtn" class="editar-btn">Editar información</button>
+            <button id="guardarDocenteBtn" class="guardar-btn" style="display:none;">Guardar cambios</button>
+        </div>
+    </main>
+    <div class="modal" id="modalError">
+        <div class="modal-content">
+            <span id="modalErrorMsg"></span>
+            <button onclick="cerrarModalError()">Cerrar</button>
+        </div>
+    </div>
+    <script src="JDDocentes.js"></script>
+</body>
+</html>
+        const menuIcon = document.getElementById('menuIcon');
+        const docMenu = document.getElementById('docMenu');
+        menuIcon.onclick = function(e) {
+            docMenu.style.display = docMenu.style.display === 'flex' ? 'none' : 'flex';
+            docMenu.style.flexDirection = 'column';
+            e.stopPropagation();
+        };
+        document.body.onclick = function() {
+            docMenu.style.display = 'none';
+        };
+        docMenu.onclick = function(e) {
+            e.stopPropagation();
+        };
+    </script>
+</body>
+</html>

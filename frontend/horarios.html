@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Horarios - Jefe de Departamento</title>
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7fb; }
+    .header { background: #1846b6; color: #fff; display: flex; align-items: center; padding: 0 30px; height: 70px; position: relative; }
+    .header img { height: 48px; margin-right: 18px; }
+    .header-title { font-size: 2em; font-family: 'Habibi', serif; flex: 1; }
+    .menu-hamburguesa { width: 48px; height: 48px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; margin-right: 18px; z-index: 1001; }
+    .menu-hamburguesa span { display: block; height: 5px; width: 32px; background: #fff; margin: 5px 0; border-radius: 2px; transition: 0.2s; }
+    .menu-desplegable { display: none; position: absolute; top: 70px; left: 10px; background: #fff; color: #1846b6; border-radius: 12px; box-shadow: 0 4px 16px rgba(24,70,182,0.12); min-width: 180px; z-index: 2000; flex-direction: column; padding: 10px 0; }
+    .menu-desplegable a { color: #1846b6; text-decoration: none; font-size: 1.1em; padding: 12px 30px; border-radius: 0 18px 18px 0; transition: background 0.2s, color 0.2s; margin-right: 10px; display: block; cursor: pointer; }
+    .menu-desplegable a:hover { background: #e5e7eb; color: #0d2a6b; font-weight: bold; }
+    .main-content { max-width: 1100px; margin: 40px auto 0 auto; padding: 0 20px 40px 20px; }
+    .section-title { font-size: 1.3em; font-weight: bold; margin: 30px 0 18px 0; color: #1846b6; }
+    .horario-table { border-collapse: collapse; width: 100%; margin-top: 18px; background: #fff; box-shadow: 0 2px 8px rgba(24,70,182,0.04); border-radius: 8px; overflow: hidden; }
+    .horario-table th, .horario-table td { border: 1px solid #bdbdbd; padding: 8px 10px; text-align: center; }
+    .horario-table th { background: #bfa16c; color: #fff; font-weight: bold; }
+    .horario-table tr:nth-child(even) { background: #f9fafb; }
+    .horario-table tr:hover { background: #f3f4f6; }
+    .error-message { color: #c00; margin-bottom: 10px; font-size: 1em; }
+    .edit-btn { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 6px 18px; font-size: 1em; cursor: pointer; }
+    .edit-btn:hover { background: #0d2a6b; }
+    .selector-bar { margin-bottom: 24px; display: flex; gap: 18px; align-items: center; }
+    .selector-btn { background: #e5e7eb; color: #1846b6; border: none; border-radius: 8px; padding: 10px 30px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
+    .selector-btn.active, .selector-btn:hover { background: #1846b6; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="menu-hamburguesa" id="menuBtn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <img src="public/tecnologico.png" alt="Logo TecNM">
+    <span class="header-title">Gestión de Horarios - Jefe de Departamento</span>
+    <div class="menu-desplegable" id="menuDesplegable" style="display:none;">
+      <a onclick="irA('jefe.html')">Inicio</a>
+      <a onclick="irA('JDDocentes.html')">Docentes</a>
+      <a onclick="irA('horarios.html')">Horarios</a>
+      <a onclick="irA('gestion_alumnos.html')">Gestionar alumnos</a>
+      <a onclick="cerrarSesion()">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="section-title">Gestión de horarios</div>
+    <div style="margin-bottom:18px;">
+      <label for="periodoActualSelect"><b>Periodo actual:</b></label>
+      <select id="periodoActualSelect"></select>
+      <button onclick="cambiarPeriodoActual()" style="margin-left:10px;">Cambiar periodo</button>
+    </div>
+    <div class="selector-bar">
+      <button class="selector-btn active" id="btnAlumnos">Horarios de alumnos</button>
+      <button class="selector-btn" id="btnDocentes">Horarios de docentes</button>
+    </div>
+    <div id="tab-alumnos" class="tab-content active">
+      <table class="horario-table">
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Materia</th>
+            <th>Grupo</th>
+            <th>Periodo</th>
+            <th>Docente</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+            <th>Sábado</th>
+            <th>Domingo</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="horario-alumnos-body"></tbody>
+      </table>
+      <div class="error-message" id="errorMsgAlumnos" style="display:none;"></div>
+    </div>
+    <div id="tab-docentes" class="tab-content" style="display:none;">
+      <table class="horario-table">
+        <thead>
+          <tr>
+            <th>Docente</th>
+            <th>Materia</th>
+            <th>Grupo</th>
+            <th>Periodo</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+            <th>Sábado</th>
+            <th>Domingo</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="horario-docentes-body"></tbody>
+      </table>
+      <div class="error-message" id="errorMsgDocentes" style="display:none;"></div>
+    </div>
+  </div>
+  <script>
+    // Menú hamburguesa funcional
+    document.getElementById('menuBtn').onclick = function(e) {
+      const menu = document.getElementById('menuDesplegable');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+      menu.style.flexDirection = 'column';
+      e.stopPropagation();
+    };
+    document.body.onclick = function() {
+      document.getElementById('menuDesplegable').style.display = 'none';
+    };
+    document.getElementById('menuDesplegable').onclick = function(e) {
+      e.stopPropagation();
+    };
+    function irA(pagina) { window.location.href = pagina; }
+    function cerrarSesion() { localStorage.removeItem('jefe'); window.location.href = 'indexSP.html'; }
+
+    async function cargarPeriodosActual() {
+      const select = document.getElementById('periodoActualSelect');
+      if (!select) return;
+      try {
+        const res = await fetch('https://sistemaescolar-backend.onrender.com/api/periodos');
+        if (!res.ok) throw new Error('No se pudo cargar los periodos');
+        const periodos = await res.json();
+        const periodoRes = await fetch('https://sistemaescolar-backend.onrender.com/api/periodo-actual');
+        const periodoActual = (await periodoRes.json()).periodo_actual;
+        select.innerHTML = '';
+        periodos.forEach(nombre => {
+          const opt = document.createElement('option');
+          opt.value = nombre;
+          opt.textContent = nombre;
+          if (nombre === periodoActual) opt.selected = true;
+          select.appendChild(opt);
+        });
+      } catch (err) {}
+    }
+
+    async function cargarHorariosAlumnos() {
+      const tbody = document.getElementById('horario-alumnos-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      document.getElementById('errorMsgAlumnos').style.display = 'none';
+      const periodo = document.getElementById('periodoActualSelect')?.value;
+      try {
+        const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/horarios-jefe?periodo=${encodeURIComponent(periodo)}`);
+        if (!res.ok) throw new Error('No se pudo cargar el horario');
+        const horarios = await res.json();
+        if (!Array.isArray(horarios) || horarios.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="13">No hay horarios registrados.</td></tr>';
+          return;
+        }
+        horarios.forEach(h => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${h.alumno_nombre || ''}</td>
+            <td>${h.nombre_materia || ''}</td>
+            <td>${h.grupo || ''}</td>
+            <td>${h.periodo || ''}</td>
+            <td>${h.docente_nombre || ''}</td>
+            <td>${h.lunes || ''}</td>
+            <td>${h.martes || ''}</td>
+            <td>${h.miercoles || ''}</td>
+            <td>${h.jueves || ''}</td>
+            <td>${h.viernes || ''}</td>
+            <td>${h.sabado || ''}</td>
+            <td>${h.domingo || ''}</td>
+            <td><button class="edit-btn" onclick="editarHorario(${h.horario_id})">Editar</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('errorMsgAlumnos').textContent = 'Error al cargar horarios';
+        document.getElementById('errorMsgAlumnos').style.display = 'block';
+      }
+    }
+
+    async function cargarHorariosDocentes() {
+      const tbody = document.getElementById('horario-docentes-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      document.getElementById('errorMsgDocentes').style.display = 'none';
+      const periodo = document.getElementById('periodoActualSelect')?.value;
+      try {
+        const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/horarios-docentes-jefe?periodo=${encodeURIComponent(periodo)}`);
+        if (!res.ok) throw new Error('No se pudo cargar el horario');
+        const horarios = await res.json();
+        if (!Array.isArray(horarios) || horarios.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="12">No hay horarios registrados.</td></tr>';
+          return;
+        }
+        horarios.forEach(h => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${h.docente_nombre || ''}</td>
+            <td>${h.materia_nombre || ''}</td>
+            <td>${h.grupo || ''}</td>
+            <td>${h.periodo || ''}</td>
+            <td>${h.lunes || ''}</td>
+            <td>${h.martes || ''}</td>
+            <td>${h.miercoles || ''}</td>
+            <td>${h.jueves || ''}</td>
+            <td>${h.viernes || ''}</td>
+            <td>${h.sabado || ''}</td>
+            <td>${h.domingo || ''}</td>
+            <td><button class="edit-btn" onclick="editarHorario(${h.id})">Editar</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('errorMsgDocentes').textContent = 'Error al cargar horarios';
+        document.getElementById('errorMsgDocentes').style.display = 'block';
+      }
+    }
+
+    function mostrarTab(tab) {
+      document.getElementById('btnAlumnos').classList.remove('active');
+      document.getElementById('btnDocentes').classList.remove('active');
+      document.getElementById('tab-alumnos').style.display = 'none';
+      document.getElementById('tab-docentes').style.display = 'none';
+      if (tab === 'alumnos') {
+        document.getElementById('btnAlumnos').classList.add('active');
+        document.getElementById('tab-alumnos').style.display = '';
+        cargarHorariosAlumnos();
+      } else {
+        document.getElementById('btnDocentes').classList.add('active');
+        document.getElementById('tab-docentes').style.display = '';
+        cargarHorariosDocentes();
+      }
+    }
+
+    async function cambiarPeriodoActual() {
+      const select = document.getElementById('periodoActualSelect');
+      if (!select) return;
+      const periodo = select.value;
+      await fetch('https://sistemaescolar-backend.onrender.com/api/periodo-actual', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: periodo })
+      });
+      mostrarTab(document.getElementById('btnAlumnos').classList.contains('active') ? 'alumnos' : 'docentes');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      cargarPeriodosActual();
+      mostrarTab('alumnos');
+      document.getElementById('periodoActualSelect').onchange = function() {
+        mostrarTab(document.getElementById('btnAlumnos').classList.contains('active') ? 'alumnos' : 'docentes');
+      };
+      document.getElementById('btnAlumnos').onclick = function() {
+        mostrarTab('alumnos');
+      };
+      document.getElementById('btnDocentes').onclick = function() {
+        mostrarTab('docentes');
+      };
+    });
+  </script>
+</body>
+</html>
+      } catch (err) {
+        document.getElementById('errorMsgDocentes').textContent = 'Error al cargar horarios';
+        document.getElementById('errorMsgDocentes').style.display = 'block';
+      }
+    }
+
+    // Modal edición
+    let horarioActual = null;
+    async function editarHorario(id) {
+      // Busca el horario por id en la tabla actual
+      let horarios = document.getElementById('tab-alumnos').style.display !== 'none'
+        ? await fetch('http://localhost:4000/api/horarios-jefe').then(r=>r.json())
+        : await fetch('http://localhost:4000/api/horarios-docentes-jefe').then(r=>r.json());
+      horarioActual = horarios.find(h => h.id == id);
+      if (!horarioActual) return;
+      document.getElementById('editHorarioId').value = id;
+      document.getElementById('editGrupo').value = horarioActual.grupo || '';
+      document.getElementById('editLunes').value = horarioActual.lunes || '';
+      document.getElementById('editMartes').value = horarioActual.martes || '';
+      document.getElementById('editMiercoles').value = horarioActual.miercoles || '';
+      document.getElementById('editJueves').value = horarioActual.jueves || '';
+      document.getElementById('editViernes').value = horarioActual.viernes || '';
+      document.getElementById('editSabado').value = horarioActual.sabado || '';
+      document.getElementById('editDomingo').value = horarioActual.domingo || '';
+      // Carga docentes para el select
+      const res = await fetch('http://localhost:4000/api/docentes');
+      const docentes = await res.json();
+      const select = document.getElementById('editDocente');
+      select.innerHTML = '';
+      docentes.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `${d.nombre} ${d.apellido}`;
+        if (horarioActual.docente_nombre && horarioActual.docente_nombre.includes(d.nombre)) opt.selected = true;
+        select.appendChild(opt);
+      });
+      document.getElementById('modalEditarHorario').style.display = 'flex';
+      document.getElementById('modalEditarError').style.display = 'none';
+    }
+    function cerrarModalEditarHorario() {
+      document.getElementById('modalEditarHorario').style.display = 'none';
+    }
+    document.getElementById('formEditarHorario').onsubmit = async function(e) {
+      e.preventDefault();
+      const id = document.getElementById('editHorarioId').value;
+      const grupo = document.getElementById('editGrupo').value;
+      const docente_id = document.getElementById('editDocente').value;
+      const lunes = document.getElementById('editLunes').value;
+      const martes = document.getElementById('editMartes').value;
+      const miercoles = document.getElementById('editMiercoles').value;
+      const jueves = document.getElementById('editJueves').value;
+      const viernes = document.getElementById('editViernes').value;
+      const sabado = document.getElementById('editSabado').value;
+      const domingo = document.getElementById('editDomingo').value;
+      try {
+        const res = await fetch(`http://localhost:4000/api/horario/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grupo, docente_id, lunes, martes, miercoles, jueves, viernes, sabado, domingo })
+        });
+        const data = await res.json();
+        if (data.success) {
+          cerrarModalEditarHorario();
+          // Recarga la tabla actual
+          if (document.getElementById('tab-alumnos').style.display !== 'none') cargarHorariosAlumnos();
+          else cargarHorariosDocentes();
+        } else {
+          document.getElementById('modalEditarError').textContent = data.message || 'Error al guardar';
+          document.getElementById('modalEditarError').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('modalEditarError').textContent = 'Error al guardar';
+        document.getElementById('modalEditarError').style.display = 'block';
+      }
+    };
+
+    // Cargar periodos y establecer el periodo actual
+    async function cargarPeriodosActual() {
+      const res = await fetch('http://localhost:4000/api/periodos');
+      const periodos = await res.json();
+      const periodoRes = await fetch('http://localhost:4000/api/periodo-actual');
+      const periodoActual = (await periodoRes.json()).periodo_actual;
+      const select = document.getElementById('periodoActualSelect');
+      select.innerHTML = '';
+      periodos.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.nombre;
+        opt.textContent = p.nombre;
+        if (p.nombre === periodoActual) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    async function cambiarPeriodoActual() {
+      const select = document.getElementById('periodoActualSelect');
+      if (!select) return;
+      const periodo = select.value;
+      await fetch('http://localhost:4000/api/periodo-actual', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: periodo })
+      });
+      mostrarTab('alumnos');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      cargarPeriodosActual();
+      mostrarTab('alumnos');
+      document.getElementById('periodoActualSelect').onchange = function() {
+        // Recarga la tabla activa al cambiar el periodo
+        if (document.getElementById('btnAlumnos').classList.contains('active')) {
+          cargarHorariosAlumnos();
+        } else {
+          cargarHorariosDocentes();
+        }
+      };
+      document.getElementById('btnAlumnos').onclick = function() {
+        mostrarTab('alumnos');
+      };
+      document.getElementById('btnDocentes').onclick = function() {
+        mostrarTab('docentes');
+      };
+    });
+  </script>
+</body>
+</html>

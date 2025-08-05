@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Kardex - Alumno</title>
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7fb; }
+    .header { background: #1846b6; color: #fff; display: flex; align-items: center; padding: 0 30px; height: 70px; position: relative; }
+    .header img { height: 48px; margin-right: 18px; }
+    .header-title { font-size: 2em; font-family: 'Habibi', serif; flex: 1; }
+    .menu-hamburguesa { width: 48px; height: 48px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; margin-right: 18px; z-index: 1001; }
+    .menu-hamburguesa span { display: block; height: 5px; width: 32px; background: #fff; margin: 5px 0; border-radius: 2px; transition: 0.2s; }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-left: 10px; cursor: pointer; border: 2px solid #fff; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .menu-desplegable { display: none; position: absolute; top: 70px; left: 10px; background: #fff; color: #1846b6; border-radius: 12px; box-shadow: 0 4px 16px rgba(24,70,182,0.12); min-width: 180px; z-index: 2000; flex-direction: column; padding: 10px 0; }
+    .menu-desplegable a { color: #1846b6; text-decoration: none; font-size: 1.1em; padding: 12px 30px; border-radius: 0 18px 18px 0; transition: background 0.2s, color 0.2s; margin-right: 10px; display: block; cursor: pointer; }
+    .menu-desplegable a:hover { background: #e5e7eb; color: #0d2a6b; font-weight: bold; }
+    .main-content { max-width: 1200px; margin: 40px auto 0 auto; padding: 0 20px 40px 20px; }
+    .kardex-table { border-collapse: separate; border-spacing: 12px 8px; width: 100%; }
+    .kardex-table th { background: #bfa16c; color: #fff; font-weight: bold; padding: 10px 0; border-radius: 8px; }
+    .materia-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(24,70,182,0.08); padding: 10px 8px; margin-bottom: 8px; text-align: center; border: 2px solid #e5e7eb; transition: background 0.2s, color 0.2s; }
+    .materia-card.cursada { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .materia-clave { font-weight: bold; font-size: 1em; }
+    .materia-nombre { font-size: 0.95em; margin: 4px 0; }
+    .materia-creditos { font-size: 0.9em; color: #bfa16c; }
+    @media (max-width: 900px) {
+      .main-content { max-width: 98vw; padding: 0 5vw 40px 5vw; }
+      .kardex-table th, .kardex-table td { font-size: 0.95em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="menu-hamburguesa" id="menuBtn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <img src="public/tecnologico.png" alt="Logo TecNM">
+    <span class="header-title">Ingenieria En Sistemas Computacionales</span>
+    <div class="avatar" id="avatar">
+      <img id="foto-perfil" src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png" alt="Foto de perfil">
+    </div>
+    <div class="menu-desplegable" id="menuDesplegable">
+      <a onclick="irA('alumnos.html')">Inicio</a>
+      <a onclick="irA('calificaciones.html')">Calificaciones</a>
+      <a onclick="irA('horario.html')">Horario</a>
+      <a onclick="irA('kardex.html')">Kardex</a>
+      <a onclick="cerrarSesion()">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="main-content">
+    <h2 style="text-align:center; color:#1846b6;">KARDEX</h2>
+    <div id="kardex-table-container"></div>
+  </div>
+  <script>
+    // Menú hamburguesa
+    document.getElementById('menuBtn').onclick = function(e) {
+      const menu = document.getElementById('menuDesplegable');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+      menu.style.flexDirection = 'column';
+      e.stopPropagation();
+    };
+    document.body.onclick = function() {
+      document.getElementById('menuDesplegable').style.display = 'none';
+    };
+    document.getElementById('menuDesplegable').onclick = function(e) {
+      e.stopPropagation();
+    };
+    function irA(pagina) {
+      window.location.href = pagina;
+    }
+    function cerrarSesion() {
+      localStorage.removeItem('alumno');
+      window.location.href = 'indexSP.html';
+    }
+
+    let alumno = null;
+    document.addEventListener('DOMContentLoaded', async function() {
+      alumno = JSON.parse(localStorage.getItem('alumno'));
+      if (!alumno) {
+        window.location.href = 'indexSP.html';
+        return;
+      }
+      if (alumno.foto_perfil) {
+        document.getElementById('foto-perfil').src = alumno.foto_perfil;
+      }
+      await cargarKardex();
+    });
+
+    async function cargarKardex() {
+      // 1. Trae todas las materias
+      const materiasRes = await fetch('http://localhost:4000/api/materias');
+      const materias = await materiasRes.json();
+      // 2. Trae todas las materias cursadas por el alumno (calificaciones)
+      const califRes = await fetch(`http://localhost:4000/api/kardex/${alumno.id}`);
+      const cursadas = await califRes.json(); // Array de materia_id
+      // 3. Agrupa materias por semestre
+      const semestres = {};
+      materias.forEach(m => {
+        if (!semestres[m.semestre]) semestres[m.semestre] = [];
+        semestres[m.semestre].push(m);
+      });
+      // 4. Renderiza la tabla
+      const maxSemestre = Math.max(...materias.map(m => m.semestre));
+      let html = `<table class="kardex-table"><thead><tr>`;
+      for (let s = 1; s <= maxSemestre; s++) {
+        html += `<th>Semestre ${s}</th>`;
+      }
+      html += `</tr></thead><tbody><tr>`;
+      for (let s = 1; s <= maxSemestre; s++) {
+        html += `<td>`;
+        (semestres[s] || []).forEach(m => {
+          const cursada = cursadas.includes(m.id);
+          html += `<div class="materia-card${cursada ? ' cursada' : ''}">
+            <div class="materia-clave">${m.clave}</div>
+            <div class="materia-nombre">${m.nombre}</div>
+            <div class="materia-creditos">${m.creditos} créditos</div>
+          </div>`;
+        });
+        html += `</td>`;
+      }
+      html += `</tr></tbody></table>`;
+      document.getElementById('kardex-table-container').innerHTML = html;
+    }
+  </script>
+</body>
+</html>

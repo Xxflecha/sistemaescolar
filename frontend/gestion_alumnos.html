@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Alumnos</title>
+    <style>
+        body { font-family: 'Inter', Arial, sans-serif; background: #f4f7fb; margin: 0; }
+        .header { background: #1846b6; color: #fff; padding: 20px 40px; font-size: 1.5em; }
+        .main { max-width: 1100px; margin: 30px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(24,70,182,0.10); padding: 30px; }
+        .alumno-list { margin-bottom: 30px; }
+        .alumno-list select { font-size: 1em; padding: 8px 12px; border-radius: 8px; border: 1px solid #bfc6d1; }
+        .section-title { font-size: 1.2em; font-weight: bold; margin: 24px 0 12px 0; color: #1846b6; }
+        .info-table { border-collapse: collapse; width: 100%; margin-bottom: 18px; }
+        .info-table th, .info-table td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+        .info-table th { background: #f3f4f6; color: #222; font-weight: bold; }
+        .info-table td { background: #fff; }
+        .edit-btn, .save-btn { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 8px 22px; font-size: 1em; cursor: pointer; margin-top: 10px; }
+        .edit-btn:hover, .save-btn:hover { background: #0d2a6b; }
+        .error-message { color: #c00; margin-bottom: 10px; font-size: 1em; }
+        /* Estilos para el menú */
+        .jefe-header { display: flex; align-items: center; justify-content: space-between; background: #1846b6; color: #fff; padding: 10px 20px; position: relative; }
+        .menu-hamburguesa { display: none; flex-direction: column; cursor: pointer; }
+        .menu-hamburguesa span { height: 3px; width: 25px; background: #fff; margin: 3px 0; }
+        .jefe-logo img { height: 60px; }
+        .jefe-titulo { font-size: 1.2em; flex-grow: 1; margin-left: 10px; }
+        .jefe-profesor { display: flex; align-items: center; }
+        .jefe-avatar img { height: 40px; border-radius: 50%; }
+        .avatar-menu { display: none; position: absolute; top: 100%; right: 0; background: #fff; color: #000; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .avatar-menu button { background: #1846b6; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; }
+        .avatar-menu button:hover { background: #0d2a6b; }
+        .menu-desplegable { display: none; position: absolute; top: 100%; left: 0; background: #fff; color: #000; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 200px; }
+        .menu-desplegable a { display: block; padding: 10px 15px; text-decoration: none; color: #000; }
+        .menu-desplegable a:hover { background: #f4f4f4; }
+        @media (max-width: 768px) {
+            .menu-hamburguesa { display: flex; }
+            .jefe-logo, .jefe-titulo, .jefe-profesor { display: none; }
+            .menu-desplegable { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="jefe-header">
+        <div class="menu-hamburguesa" id="menuBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="jefe-logo">
+            <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
+        </div>
+        <div class="jefe-titulo">
+            Ingeniería En Sistemas Computacionales
+        </div>
+        <div class="jefe-profesor">
+            <span id="prof-nombre">Prof. </span>
+            <div class="jefe-avatar" id="avatarMenuBtn">
+                <img src="public/jefedepartamento.png" alt="Avatar" height="40">
+            </div>
+            <div class="avatar-menu" id="avatarMenu">
+                <button id="logoutBtn">Cerrar sesión</button>
+            </div>
+        </div>
+        <div class="menu-desplegable" id="menuDesplegable" style="display:none;">
+            <a onclick="window.location.href='jefe.html'">Inicio</a>
+            <a onclick="window.location.href='JDDocentes.html'">Docentes</a>
+            <a onclick="window.location.href='horarios.html'">Horarios</a>
+            <a onclick="window.location.href='gestion_alumnos.html'">Gestionar alumnos</a>
+            <a onclick="cerrarSesion()">Cerrar sesión</a>
+        </div>
+    </header>
+    <div class="header">Gestión de Alumnos</div>
+    <div class="main">
+        <div class="alumno-list">
+            <label for="alumnoSelect">Selecciona alumno:</label>
+            <select id="alumnoSelect"></select>
+        </div>
+        <div id="alumnoInfo"></div>
+        <div class="error-message" id="errorMsg" style="display:none;"></div>
+        <div style="margin-top:18px;">
+            <button class="edit-btn" id="editarAlumnoBtn">Editar datos</button>
+            <button class="save-btn" id="guardarAlumnoBtn" style="display:none;">Guardar cambios</button>
+        </div>
+    </div>
+    <script>
+        let alumnos = [];
+        let alumnoActual = null;
+
+        async function cargarAlumnos() {
+            const res = await fetch('https://sistemaescolar-backend.onrender.com/api/alumnos');
+            alumnos = await res.json();
+            const select = document.getElementById('alumnoSelect');
+            select.innerHTML = '';
+            alumnos.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.nombre} ${a.apellido_paterno} ${a.apellido_materno} (${a.no_control})`;
+                select.appendChild(opt);
+            });
+            if (alumnos.length > 0) {
+                select.value = alumnos[0].id;
+                cargarAlumnoCompleto(select.value);
+            }
+            select.onchange = () => cargarAlumnoCompleto(select.value);
+        }
+
+        async function cargarAlumnoCompleto(id) {
+            document.getElementById('errorMsg').style.display = 'none';
+            try {
+                const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/alumno-completo/${id}`);
+                if (!res.ok) throw new Error('No se pudo cargar el alumno');
+                alumnoActual = await res.json();
+                mostrarAlumnoInfo();
+            } catch (err) {
+                document.getElementById('errorMsg').textContent = 'Error al cargar datos del alumno';
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+
+        function mostrarAlumnoInfo() {
+            const a = alumnoActual;
+            document.getElementById('alumnoInfo').innerHTML = `
+                <div class="section-title">Información Personal</div>
+                <table class="info-table">
+                    <tr><th>No. Control</th><td id="edit-no_control">${a.no_control || ''}</td><th>Nombre</th><td id="edit-nombre">${a.nombre || ''} ${a.apellido_paterno || ''} ${a.apellido_materno || ''}</td></tr>
+                    <tr><th>CURP</th><td id="edit-curp">${a.curp || ''}</td><th>Correo</th><td id="edit-correo_personal">${a.correo_personal || ''}</td></tr>
+                    <tr><th>Teléfono</th><td id="edit-telefono">${a.telefono || ''}</td><th>Fecha Nac.</th><td id="edit-fecha_nacimiento">${a.fecha_nacimiento ? a.fecha_nacimiento.split('T')[0] : ''}</td></tr>
+                </table>
+                <div class="section-title">Información Académica</div>
+                <table class="info-table">
+                    <tr><th>Carrera</th><td id="edit-carrera">${a.carrera || ''}</td><th>Especialidad</th><td id="edit-especialidad">${a.especialidad || ''}</td></tr>
+                    <tr><th>Modalidad</th><td id="edit-modalidad">${a.modalidad || ''}</td><th>Plan</th><td id="edit-plan_estudios">${a.plan_estudios || ''}</td></tr>
+                    <tr><th>Semestre</th><td id="edit-semestre">${a.semestre || ''}</td><th>Periodo Actual</th><td id="edit-periodo_actual">${a.periodo_actual || ''}</td></tr>
+                </table>
+            `;
+        }
+
+        document.getElementById('editarAlumnoBtn').onclick = function() {
+            // Convierte los campos en inputs para edición
+            ['no_control','nombre','curp','correo_personal','telefono','fecha_nacimiento','carrera','especialidad','modalidad','plan_estudios','semestre'].forEach(id => {
+                const td = document.getElementById('edit-' + id);
+                if (td) {
+                    const valor = td.textContent;
+                    const input = document.createElement('input');
+                    input.type = (id === 'fecha_nacimiento') ? 'date' : 'text';
+                    input.value = valor;
+                    input.style.width = '120px';
+                    td.innerHTML = '';
+                    td.appendChild(input);
+                }
+            });
+            this.style.display = 'none';
+            document.getElementById('guardarAlumnoBtn').style.display = '';
+        };
+
+        document.getElementById('guardarAlumnoBtn').onclick = async function() {
+            const datos = {};
+            ['no_control','nombre','curp','correo_personal','telefono','fecha_nacimiento','carrera','especialidad','modalidad','plan_estudios','semestre'].forEach(id => {
+                const td = document.getElementById('edit-' + id);
+                if (td && td.firstChild && td.firstChild.tagName === 'INPUT') {
+                    datos[id] = td.firstChild.value;
+                }
+            });
+            this.disabled = true;
+            try {
+                const res = await fetch(`https://sistemaescolar-backend.onrender.com/api/alumnos/${alumnoActual.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    Object.assign(alumnoActual, datos);
+                    mostrarAlumnoInfo();
+                    document.getElementById('editarAlumnoBtn').style.display = '';
+                    this.style.display = 'none';
+                    document.getElementById('errorMsg').style.display = 'none';
+                } else {
+                    document.getElementById('errorMsg').textContent = data.message || 'Error al guardar datos';
+                    document.getElementById('errorMsg').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('errorMsg').textContent = 'Error al guardar datos';
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+            this.disabled = false;
+        };
+
+        document.addEventListener('DOMContentLoaded', cargarAlumnos);
+
+        // Menú hamburguesa funcional
+        document.getElementById('menuBtn').onclick = function(e) {
+            const menu = document.getElementById('menuDesplegable');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+            menu.style.flexDirection = 'column';
+            e.stopPropagation();
+        };
+        document.body.onclick = function() {
+            document.getElementById('menuDesplegable').style.display = 'none';
+        };
+        document.getElementById('menuDesplegable').onclick = function(e) {
+            e.stopPropagation();
+        };
+        function cerrarSesion() {
+            localStorage.removeItem('jefe');
+            window.location.href = 'indexSP.html';
+        }
+    </script>
+</body>
+</html>
