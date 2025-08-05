@@ -16,13 +16,13 @@
             <span></span>
         </div>
         <div class="jefe-logo">
-            <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
+            <img src="tec.png" alt="Logo Instituto" height="60">
         </div>
         <div class="jefe-titulo">
             Ingeniería En Sistemas Computacionales
         </div>
         <div class="jefe-profesor">
-            <span id="prof-nombre">Prof. </span>
+            <span id="prof-nombre"></span>
             <div class="jefe-avatar" id="avatarMenuBtn">
                 <img src="public/jefedepartamento.png" alt="Avatar" height="40">
             </div>
@@ -42,7 +42,7 @@
         <div class="jefe-layout">
             <aside class="jefe-sidebar">
                 <div class="sidebar-logo">
-                    <img src="public/tecnologico.png" alt="Logo Instituto" height="60">
+                    <img src="tec.png" alt="Logo Instituto" height="60">
                 </div>
                 <nav class="sidebar-menu">
                     <button class="sidebar-btn" id="btnDocentes">Docentes</button>
@@ -50,6 +50,7 @@
                     <button class="sidebar-btn" id="btnGestionAlumnos">Gestionar alumnos</button>
                     <button class="sidebar-btn" id="btnImprimir">Imprimir Documentos</button>
                 </nav>
+                <button id="sidebarLogoutBtn" style="margin-top:20px;background:#c00;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Cerrar sesión</button>
             </aside>
             <section class="jefe-content">
                 <h2 class="jefe-central-title">JEFE DE DEPARTAMENTO</h2>
@@ -67,6 +68,20 @@
             </section>
         </div>
     </main>
+    <!-- Modal para editar información -->
+    <div class="modal" id="modalEditar" style="display:none;">
+        <div class="modal-content">
+            <h3>Editar Información Personal</h3>
+            <form id="formEditar">
+                <label>Nombre: <input type="text" id="edit-nombre" required></label><br>
+                <label>Apellido: <input type="text" id="edit-apellido" required></label><br>
+                <label>Departamento: <input type="text" id="edit-departamento" required></label><br>
+                <button type="submit">Guardar</button>
+                <button type="button" id="cancelarEditar">Cancelar</button>
+            </form>
+            <div id="editarMsg" style="margin-top:10px;color:#c00;"></div>
+        </div>
+    </div>
     <div class="modal" id="modalImprimir">
         <div class="modal-content">
             <h3>Imprimir Documentos</h3>
@@ -81,17 +96,18 @@
         </div>
     </div>
     <script>
-    // Cargar datos del jefe
+    // Cargar datos del jefe y mostrar "Jefe {nombre} {apellido}"
     document.addEventListener('DOMContentLoaded', function() {
         const jefe = JSON.parse(localStorage.getItem('jefe'));
         if (jefe) {
-            document.getElementById('prof-nombre').textContent = `Prof. ${jefe.nombre} ${jefe.apellido}`;
+            document.getElementById('prof-nombre').textContent = `Jefe ${jefe.nombre} ${jefe.apellido}`;
             document.getElementById('info-nombre').textContent = jefe.nombre;
             document.getElementById('info-apellido').textContent = jefe.apellido;
-            document.getElementById('info-departamento').textContent = jefe.departamento_nombre || jefe.departamento_id;
+            document.getElementById('info-departamento').textContent = jefe.departamento_nombre || jefe.departamento_id || jefe.departamento || '';
         }
         document.getElementById('menuDesplegable').style.display = 'none';
     });
+
     // Avatar menu
     const avatarBtn = document.getElementById('avatarMenuBtn');
     const avatarMenu = document.getElementById('avatarMenu');
@@ -99,12 +115,20 @@
         avatarMenu.classList.toggle('show');
         e.stopPropagation();
     };
-    document.body.onclick = function() { avatarMenu.classList.remove('show'); };
-    avatarMenu.onclick = function(e) { e.stopPropagation(); };
-    document.getElementById('logoutBtn').onclick = function() {
-        localStorage.removeItem('jefe');
-        window.location.href = 'indexSP.html';
+    document.body.onclick = function() { 
+        avatarMenu.classList.remove('show'); 
+        document.getElementById('menuDesplegable').style.display = 'none';
     };
+    avatarMenu.onclick = function(e) { e.stopPropagation(); };
+
+    // Cerrar sesión (avatar y sidebar)
+    function cerrarSesion() {
+        localStorage.removeItem('jefe');
+        window.location.href = 'index.html';
+    }
+    document.getElementById('logoutBtn').onclick = cerrarSesion;
+    document.getElementById('sidebarLogoutBtn').onclick = cerrarSesion;
+
     // Modal imprimir
     const modal = document.getElementById('modalImprimir');
     document.getElementById('btnImprimir').onclick = function() {
@@ -208,16 +232,69 @@
         menu.style.flexDirection = 'column';
         e.stopPropagation();
     };
-    document.body.onclick = function() {
-        document.getElementById('menuDesplegable').style.display = 'none';
-    };
     document.getElementById('menuDesplegable').onclick = function(e) {
         e.stopPropagation();
     };
-    function cerrarSesion() {
-        localStorage.removeItem('jefe');
-        window.location.href = 'indexSP.html';
-    }
+
+    // Modal editar información
+    const modalEditar = document.getElementById('modalEditar');
+    const formEditar = document.getElementById('formEditar');
+    document.getElementById('editarBtn').onclick = function() {
+        const jefe = JSON.parse(localStorage.getItem('jefe'));
+        document.getElementById('edit-nombre').value = jefe?.nombre || '';
+        document.getElementById('edit-apellido').value = jefe?.apellido || '';
+        document.getElementById('edit-departamento').value = jefe?.departamento_nombre || jefe?.departamento_id || jefe?.departamento || '';
+        document.getElementById('editarMsg').textContent = '';
+        modalEditar.style.display = 'flex';
+    };
+    document.getElementById('cancelarEditar').onclick = function() {
+        modalEditar.style.display = 'none';
+    };
+    formEditar.onsubmit = async function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('edit-nombre').value.trim();
+        const apellido = document.getElementById('edit-apellido').value.trim();
+        const departamento = document.getElementById('edit-departamento').value.trim();
+        if (!nombre || !apellido || !departamento) {
+            document.getElementById('editarMsg').textContent = 'Todos los campos son obligatorios.';
+            return;
+        }
+        let jefe = JSON.parse(localStorage.getItem('jefe')) || {};
+        // Asume que el jefe tiene un id o username para identificarlo
+        const id = jefe.id || jefe.username || jefe.usuario || jefe._id;
+        try {
+            const response = await fetch('https://sistemaescolar-backend.onrender.com/jefe/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre,
+                    apellido,
+                    departamento_nombre: departamento
+                })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                // Actualiza localStorage y la vista solo si fue exitoso
+                jefe.nombre = nombre;
+                jefe.apellido = apellido;
+                jefe.departamento_nombre = departamento;
+                localStorage.setItem('jefe', JSON.stringify(jefe));
+                document.getElementById('prof-nombre').textContent = `Jefe ${nombre} ${apellido}`;
+                document.getElementById('info-nombre').textContent = nombre;
+                document.getElementById('info-apellido').textContent = apellido;
+                document.getElementById('info-departamento').textContent = departamento;
+                document.getElementById('editarMsg').style.color = 'green';
+                document.getElementById('editarMsg').textContent = 'Información actualizada correctamente.';
+                setTimeout(() => { modalEditar.style.display = 'none'; }, 1000);
+            } else {
+                document.getElementById('editarMsg').style.color = '#c00';
+                document.getElementById('editarMsg').textContent = (data && data.message) || 'Error al actualizar la información.';
+            }
+        } catch (err) {
+            document.getElementById('editarMsg').style.color = '#c00';
+            document.getElementById('editarMsg').textContent = 'Error de conexión con el servidor.';
+        }
+    };
     </script>
 </body>
 </html>
