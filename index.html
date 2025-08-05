@@ -196,102 +196,102 @@
         </div>
     </div>
     <script>
-        let selectedRole = null;
-        function openLogin(role) {
-            selectedRole = role;
-            document.getElementById('loginModalBg').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            let title = "Iniciar Sesión";
-            if (role === "alumno") title = "Iniciar Sesión - Alumno";
-            if (role === "docente") title = "Iniciar Sesión - Docente";
-            if (role === "jefe") title = "Iniciar Sesión - Jefe de Departamento";
-            document.getElementById('loginTitle').textContent = title;
-            document.getElementById('login-error').style.display = "none";
-            document.getElementById('loginForm').reset();
+    let selectedRole = null;
+    function openLogin(role) {
+        selectedRole = role;
+        document.getElementById('loginModalBg').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        let title = "Iniciar Sesión";
+        if (role === "alumno") title = "Iniciar Sesión - Alumno";
+        if (role === "docente") title = "Iniciar Sesión - Docente";
+        if (role === "jefe") title = "Iniciar Sesión - Jefe de Departamento";
+        document.getElementById('loginTitle').textContent = title;
+        document.getElementById('login-error').style.display = "none";
+        document.getElementById('loginForm').reset();
+    }
+    function closeLogin() {
+        document.getElementById('loginModalBg').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    document.getElementById('loginForm').onsubmit = async function(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorDiv = document.getElementById('login-error');
+        errorDiv.style.display = "none";
+        if (!username || !password) {
+            errorDiv.textContent = "Por favor, completa todos los campos.";
+            errorDiv.style.display = "block";
+            return;
         }
-        function closeLogin() {
-            document.getElementById('loginModalBg').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-        document.getElementById('loginForm').onsubmit = async function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const errorDiv = document.getElementById('login-error');
-            errorDiv.style.display = "none";
-            if (!username || !password) {
-                errorDiv.textContent = "Por favor, completa todos los campos.";
+        if (selectedRole === 'jefe') {
+            try {
+                const response = await fetch('https://sistemaescolar-backend.onrender.com/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, role: 'jefe' })
+                });
+                const data = await response.json();
+                if (response.ok && data.success && data.jefe) {
+                    localStorage.setItem('jefe', JSON.stringify(data.jefe));
+                    window.location.href = 'jefe.html';
+                } else {
+                    errorDiv.textContent = (data && data.message) || 'Credenciales incorrectas';
+                    errorDiv.style.display = "block";
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error de conexión con el servidor';
                 errorDiv.style.display = "block";
-                return;
             }
-            if (selectedRole === 'jefe') {
-                try {
-                   const response = await fetch('https://sistemaescolar-backend.onrender.com/login-alumno', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario: username, contrasena: password })
-});
-                    const data = await response.json();
-                    if (response.ok && data.success && data.jefe) {
-                        localStorage.setItem('jefe', JSON.stringify(data.jefe));
-                        window.location.href = 'jefe.html';
-                    } else {
-                        errorDiv.textContent = (data && data.message) || 'Credenciales incorrectas';
-                        errorDiv.style.display = "block";
-                    }
-                } catch (err) {
-                    errorDiv.textContent = 'Error de conexión con el servidor';
+        } else if (selectedRole === 'alumno') {
+            try {
+                const response = await fetch('https://sistemaescolar-backend.onrender.com/login-alumno', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: username, contrasena: password })
+                });
+                const data = await response.json();
+                if (response.ok && data.success && data.alumno) {
+                    localStorage.setItem('alumno', JSON.stringify(data.alumno));
+                    window.location.href = 'alumnos.html';
+                } else {
+                    errorDiv.textContent = (data && data.message) || 'Credenciales incorrectas';
                     errorDiv.style.display = "block";
                 }
-            } else if (selectedRole === 'alumno') {
-                try {
-                  const response = await fetch('https://sistemaescolar-backend.onrender.com/login-alumno', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario: username, contrasena: password })
-});
-                    const data = await response.json();
-                    if (response.ok && data.success && data.alumno) {
-                        localStorage.setItem('alumno', JSON.stringify(data.alumno));
-                        window.location.href = 'alumnos.html';
-                    } else {
-                        errorDiv.textContent = (data && data.message) || 'Credenciales incorrectas';
-                        errorDiv.style.display = "block";
-                    }
-                } catch (err) {
-                    errorDiv.textContent = 'Error de conexión con el servidor';
-                    errorDiv.style.display = "block";
-                }
-            } else if (selectedRole === 'docente') {
-                try {
-                   const response = await fetch('https://sistemaescolar-backend.onrender.com/login-alumno', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario: username, contrasena: password })
-});
-                    const data = await response.json();
-                    if (response.ok && data.success && data.docente) {
-                        localStorage.setItem('docente', JSON.stringify(data.docente));
-                        window.location.href = 'docentes.html';
-                    } else {
-                        errorDiv.textContent = (data && data.message) || 'Credenciales incorrectas';
-                        errorDiv.style.display = "block";
-                    }
-                } catch (err) {
-                    errorDiv.textContent = 'Error de conexión con el servidor';
-                    errorDiv.style.display = "block";
-                }
+            } catch (err) {
+                errorDiv.textContent = 'Error de conexión con el servidor';
+                errorDiv.style.display = "block";
             }
-        };
-        // Cerrar modal con Escape
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') closeLogin();
-        });
-        // Cerrar modal al hacer clic fuera
-        document.getElementById('loginModalBg').onclick = function(e) {
-            if (e.target === this) closeLogin();
-        };
-    </script>
+        } else if (selectedRole === 'docente') {
+            try {
+                const response = await fetch('https://sistemaescolar-backend.onrender.com/login-docente', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: username, contrasena: password })
+                });
+                const data = await response.json();
+                if (response.ok && data.success && data.docente) {
+                    localStorage.setItem('docente', JSON.stringify(data.docente));
+                    window.location.href = 'docentes.html';
+                } else {
+                    errorDiv.textContent = (data && data.message) || 'Credenciales incorrectas';
+                    errorDiv.style.display = "block";
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error de conexión con el servidor';
+                errorDiv.style.display = "block";
+            }
+        }
+    };
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') closeLogin();
+    });
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('loginModalBg').onclick = function(e) {
+        if (e.target === this) closeLogin();
+    };
+</script>
 </body>
 </html>
 
